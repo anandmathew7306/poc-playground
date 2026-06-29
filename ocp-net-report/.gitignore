@@ -1,0 +1,4 @@
+# generated reports contain live cluster data — never commit
+report.md
+*-report.md
+*.report.md
