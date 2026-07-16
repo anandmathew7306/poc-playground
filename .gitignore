@@ -1,3 +1,6 @@
+__pycache__/
+*.pyc
+
 # generated reports contain live cluster data — never commit
 report.md
 *-report.md
