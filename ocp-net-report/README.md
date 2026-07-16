@@ -1,36 +1,45 @@
-# Openshift Network Report
+# ocp-net-report
 
-A read-only script that generates a network reference report for an OpenShift cluster — one command instead of hunting through docs or running many `oc` commands by hand.
+Generates a **full network reference report** (markdown) for an OpenShift
+cluster: core networking (cluster overview, nodes, NICs, bonds, OVS bridges,
+VLANs, VRFs, routing) plus MetalLB (BGP peers, IP pools, advertisements,
+LoadBalancer services).
 
-## What it does
+For scoped reports see the sibling folders:
 
-Connects to whatever cluster you're currently logged into (`oc`) and prints a Markdown report covering:
-
-- **Node Inventory** — hostname, role, IPv4/IPv6
-- **Physical NIC Inventory** — interface, MAC, bond/bridge, MTU, state
-- **Bond Detail** — mode, LACP rate, miimon, members
-- **VLAN & Interface Summary** — VLAN ID, parent, addresses, MTU
-- **VRF & Routing** — VRF, routing table ID, gateway
-- **BGP Peers** — peer address, ASNs, VRF, BFD
-- **IP Address Pools** — addresses, autoAssign, avoidBuggyIPs
-- **BGP Advertisements** — pools, peers, aggregation length, localPref
-- **LoadBalancer Services** — namespace, service, external IP
-
-Data comes from the Kubernetes API, NodeNetworkState (NNS), and MetalLB resources. It is **read-only** — only `oc get` / `oc whoami` are used; nothing is modified.
+- [`../ocp-net-core-report`](../ocp-net-core-report/) — core networking only
+- [`../ocp-net-metallb-report`](../ocp-net-metallb-report/) — MetalLB only
 
 ## Requirements
 
-- `python3` (no pip packages needed)
-- `oc`, logged in to the target cluster
+- `python3` (stdlib only, no pip packages)
+- `oc` logged in to the target cluster
+- Read access to: nodes, `nns` (NodeNetworkState, from kubernetes-nmstate),
+  cluster config objects (`infrastructure`, `clusterversion`, `network.config`,
+  `ingresses.config`), MetalLB CRs in `metallb-system`, and services
+  cluster-wide
+
+Read-only: only runs `oc get` / `oc whoami`.
 
 ## Usage
 
 ```bash
-python3 ocp-net-report.py                 # print report to screen
-python3 ocp-net-report.py > report.md     # save to a file
-python3 ocp-net-report.py --all-nics      # include down/unused NICs and the geneve device
+python3 ocp-net-report.py > <cluster>.report.md
+
+# include down/unused NICs and the geneve device
+python3 ocp-net-report.py --all-nics
 ```
 
-## Note
+## Report sections
 
-The **output** contains live cluster values (IPs, hostnames). Do not commit generated reports — only the script. The included `.gitignore` excludes report files.
+Core networking: Cluster Overview, Node Inventory, Physical NIC Inventory,
+Bond Detail, OVS Bridges, Network Map (one row per VLAN with subnet / VRF /
+gateway / routed-vs-L2-only), VLAN & Interface Detail, VRF & Routing.
+
+MetalLB: BGP Peers, IP Address Pools, BGP Advertisements, LoadBalancer
+Services.
+
+Section details are documented in the scoped folders' READMEs.
+
+Reports are point-in-time snapshots (a generation timestamp is embedded in the
+header). Values drift — regenerate rather than hand-editing values.
