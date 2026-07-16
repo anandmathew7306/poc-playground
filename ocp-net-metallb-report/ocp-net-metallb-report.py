@@ -25,7 +25,9 @@ def oc_json(args):
     """Run `oc <args> -o json` and return parsed JSON (or None on failure)."""
     cmd = ["oc"] + args + ["-o", "json"]
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        out = subprocess.run(cmd, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, universal_newlines=True,
+                             check=True)
         return json.loads(out.stdout)
     except subprocess.CalledProcessError as e:
         print(f"  > command failed: {' '.join(cmd)}", file=sys.stderr)
@@ -39,8 +41,9 @@ def oc_json(args):
 def oc_text(args):
     """Run `oc <args>` and return stripped stdout ('' on failure)."""
     try:
-        return subprocess.run(["oc"] + args, capture_output=True,
-                              text=True).stdout.strip()
+        return subprocess.run(["oc"] + args, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE,
+                              universal_newlines=True).stdout.strip()
     except Exception:
         return ""
 
