@@ -19,11 +19,27 @@ Usage:
 import argparse
 import ipaddress
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime
 
 SHOW_ALL_NICS = False
+
+# short_node -> 0 for control-plane/master, 1 otherwise; populated in main()
+_NODE_ROLE_RANK = {}
+
+
+def _natural_key(name):
+    """Split trailing/embedded digits so compute2 sorts before compute10."""
+    return [int(t) if t.isdigit() else t.lower()
+            for t in re.split(r"(\d+)", name)]
+
+
+def _node_key(name):
+    """Sort key: control-plane nodes first, then natural (numeric) hostname."""
+    short = name.split(".", 1)[0]
+    return (_NODE_ROLE_RANK.get(short, 1), _natural_key(short))
 
 
 def oc_json(args):
@@ -112,7 +128,8 @@ def default_routes(state):
 
 def first_state(nns):
     """State of the first node (alphabetical) — used for cluster-identical data."""
-    return next(iter(sorted(nns.items())), (None, {}))[1]
+    return next(iter(sorted(nns.items(), key=lambda kv: _node_key(kv[0]))),
+                (None, {}))[1]
 
 
 # ---------- Cluster Overview ----------
@@ -180,14 +197,14 @@ def node_inventory(nodes):
                 ipv6 = ip if ":" in ip else ipv6
                 ipv4 = ip if ":" not in ip else ipv4
         rows.append([name, ",".join(roles) or "-", ipv4, ipv6])
-    rows.sort(key=lambda r: r[0])
+    rows.sort(key=lambda r: _node_key(r[0]))
     return "## Node Inventory\n\n" + md_table(["Hostname", "Role", "IPv4", "IPv6"], rows)
 
 
 # ---------- Physical NIC Inventory ----------
 def nic_inventory(nns):
     rows = []
-    for node, state in sorted(nns.items()):
+    for node, state in sorted(nns.items(), key=lambda kv: _node_key(kv[0])):
         for i in ifaces_of(state):
             if i.get("type") != "ethernet":
                 continue
@@ -211,7 +228,7 @@ def nic_inventory(nns):
 # ---------- Bond Detail ----------
 def bond_inventory(nns):
     rows = []
-    for node, state in sorted(nns.items()):
+    for node, state in sorted(nns.items(), key=lambda kv: _node_key(kv[0])):
         for i in ifaces_of(state):
             if i.get("type") != "bond":
                 continue
@@ -253,7 +270,7 @@ def ovs_overview(nns):
                 localnets.add(pname[len("patch-"):pname.index("_ovn_localnet_port")])
 
     irows = []
-    for node, st in sorted(nns.items()):
+    for node, st in sorted(nns.items(), key=lambda kv: _node_key(kv[0])):
         for i in ifaces_of(st):
             if i.get("type") != "ovs-interface":
                 continue
@@ -301,7 +318,7 @@ def network_map(nns):
             bridge_of_port[p.get("name", "")] = i.get("name", "")
 
     agg = {}
-    for _, st in sorted(nns.items()):
+    for _, st in sorted(nns.items(), key=lambda kv: _node_key(kv[0])):
         for i in ifaces_of(st):
             if i.get("type") != "vlan":
                 continue
@@ -356,7 +373,7 @@ def network_map(nns):
 # ---------- VLAN & Interface Detail (per node) ----------
 def vlan_inventory(nns):
     rows = []
-    for node, state in sorted(nns.items()):
+    for node, state in sorted(nns.items(), key=lambda kv: _node_key(kv[0])):
         for i in ifaces_of(state):
             if i.get("type") != "vlan":
                 continue
@@ -418,6 +435,12 @@ def main():
     if not nodes or not nns:
         sys.exit("error: could not fetch nodes/nns from the cluster — "
                  "check connectivity and login; no report written")
+    for n in nodes:
+        labels = n.get("metadata", {}).get("labels", {})
+        is_cp = ("node-role.kubernetes.io/control-plane" in labels
+                 or "node-role.kubernetes.io/master" in labels)
+        _NODE_ROLE_RANK[short_node(n.get("metadata", {}).get("name", ""))] = \
+            0 if is_cp else 1
     print(cluster_overview(nodes))
     print(node_inventory(nodes))
     print(nic_inventory(nns))
