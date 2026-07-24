@@ -3,8 +3,9 @@
 Read-only **inventory** of networking-related CRDs (and a few built-in
 resources) on an OpenShift cluster.
 
-Use this before extending `ocp-net-core-report` / `ocp-net-metallb-report`, so
-documentation and scripts cover what actually exists (and skip empty noise).
+Use this before extending `ocp-net-core-report` / `ocp-net-metallb-report` /
+`ocp-net-extended-report`, so documentation and scripts cover what actually
+exists (and skip empty noise).
 
 ## Requirements
 
@@ -27,16 +28,19 @@ notes repo. This directory is safe for public repos (generic script only).
 ## What it does
 
 1. Lists CRDs whose name or API group matches networking keywords
-   (metallb, ovn, egress, nmstate, cni, sriov, …).
-2. Counts live objects per matching CRD.
+   (metallb, ovn, egress, nmstate, cni, sriov, …). Excludes Gateway API and
+   cluster-api IPAM noise.
+2. Counts live objects per matching CRD via cheap `oc get -o name` (parallel).
 3. Suggests a documentation/script **home** (heuristic): `metallb`,
-   `metallb-adjacent`, `core (ovn/policy)`, `core (host/cni)`,
+   `metallb-adjacent`, `extended`, `core (ovn/policy)`, `core (host/cni)`,
    `core (cluster-config)`, or `review`.
-4. Prints convenience counts for LoadBalancer Services, NetworkPolicies,
-   EgressIPs, and EgressServices.
+4. Prints a **present-by-home** rollup plus convenience counts (LB Services,
+   NetworkPolicies, EgressIPs, EgressServices, NAD, MultiNetworkPolicy,
+   Whereabouts IPPools).
 
 ## Related scripts
 
 - [`../ocp-net-core-report`](../ocp-net-core-report/) — host/node networking
-- [`../ocp-net-metallb-report`](../ocp-net-metallb-report/) — MetalLB
-- [`../ocp-net-report`](../ocp-net-report/) — combined core + MetalLB
+- [`../ocp-net-metallb-report`](../ocp-net-metallb-report/) — MetalLB (+ EgressService)
+- Extended Networking report — planned (`ocp-net-extended-report`)
+- [`../ocp-net-report`](../ocp-net-report/) — combined core + MetalLB (legacy)
