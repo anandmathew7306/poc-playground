@@ -35,6 +35,20 @@ cd /path/to/same-project && cursaves pull
 # Fully quit + reopen Cursor (Reload Window is not enough)
 ```
 
+### If chats import but do not appear in the UI
+
+Newer Cursor builds list Agents chats from the `composerHeaders` **SQL table**.
+`cursaves` 0.9.1 only writes the older ItemTable `composer.composerHeaders` JSON,
+so pulls can succeed while the sidebar stays empty.
+
+**Fully quit Cursor**, then:
+
+```bash
+python3 ~/Personal/poc-playground/cursaves-chat-sync/backfill-composer-headers.py
+```
+
+Reopen Cursor and open the matching project folder (e.g. `~/Personal`, `work-notes`).
+
 Daily either machine: `cursaves sync` → restart Cursor after imports.
 
 ## Rollback
