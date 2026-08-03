@@ -1,0 +1,18 @@
+apiVersion: platform.io/v1
+kind: ClusterInfo
+metadata:
+  name: ""                    # cluster name
+  environment: ""             # prod | nonprod | dev
+spec:
+  platform: ""                # ocp | rosa | rosa-hcp | eks
+  version: ""                 # platform version e.g. 4.15
+  region: ""                  # aws region or datacenter
+  cloud: ""                   # aws | azure | on-prem
+  addons: []                  # list of installed add-ons
+  acm:
+    managed: false            # is this cluster managed by ACM?
+    hub: false                # is this the ACM hub cluster?
+  skills:
+    platform_skill: ""        # which platform skill applies e.g. platform/rosa-hcp
+    cloud_skill: ""           # which cloud skill applies e.g. cloud/aws
+  notes: ""

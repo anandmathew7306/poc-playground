@@ -1,0 +1,56 @@
+apiVersion: platform.io/v1
+kind: ClientProfile
+metadata:
+  name: ""                    # client slug e.g. acme
+  created_at: ""
+  updated_at: ""
+spec:
+  # --- Identity ---
+  display_name: ""            # human readable client name
+  description: ""             # one line about what they do
+
+  # --- Platform ---
+  platform: ""                # ocp | rosa | rosa-hcp | eks
+  platform_skill: ""          # refs: platform/rosa-hcp
+  cloud: ""                   # aws | azure | on-prem
+  cloud_skill: ""             # refs: cloud/aws
+  deploy_tool: ""             # helm | kustomize | both
+  deploy_skill: ""            # refs: deploy/kustomize
+
+  # --- ACM ---
+  acm:
+    managed: false
+    policy_set: ""            # name of their PolicySet
+    placement: ""             # name of their Placement resource
+
+  # --- SRE ---
+  sre:
+    slo_file: ""              # path to their SLO definition
+    alerting: ""              # pagerduty | opsgenie | email
+    observability_skill: ""   # refs: observability/prometheus
+    dashboard_url: ""
+
+  # --- Documentation ---
+  docs:
+    style: ""                 # confluence | notion | github-wiki | gdocs
+    space_url: ""             # link to their doc space
+    runbook_path: ""          # path in platform-ops/runbooks/
+
+  # --- Compliance ---
+  compliance:
+    frameworks: []            # SOC2 | PCI | ISO27001 | FedRAMP | none
+    data_classification: ""   # public | internal | confidential | restricted
+    audit_logging: false
+
+  # --- Terminology ---
+  terminology:
+    environment_names:        # what they call environments
+      prod: ""                # e.g. "production" or "live"
+      nonprod: ""             # e.g. "staging" or "uat"
+    cluster_naming: ""        # their cluster naming convention
+    ticket_prefix: ""         # e.g. ACME for JIRA tickets
+
+  # --- Skills composition ---
+  # These are resolved automatically when a task skill loads this profile
+  active_skills:
+    - ""                      # list of all skills relevant to this client

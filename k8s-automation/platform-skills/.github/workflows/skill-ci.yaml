@@ -1,0 +1,49 @@
+name: Skill CI
+
+on:
+  pull_request:
+    paths:
+      - '.cursor/skills/**'
+      - 'governance/**'
+
+jobs:
+  validate-frontmatter:
+    name: Validate SKILL.md frontmatter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: pip install pyyaml
+      - name: Check required frontmatter fields
+        run: |
+          find .cursor/skills -name "SKILL.md" | while read f; do
+            python3 scripts/validate-frontmatter.py "$f"
+          done
+
+  security-scan-content:
+    name: Semgrep scan on SKILL.md content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: .semgrep/skill-rules.yaml
+
+  security-scan-scripts:
+    name: Snyk scan on bundled scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan scripts in skill directories
+        run: |
+          find .cursor/skills -name "*.sh" -o -name "*.py" | \
+          xargs snyk test --file={} || true
+
+  allowlist-check:
+    name: External skill allowlist check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify no external URLs outside allowlist
+        run: |
+          python3 scripts/check-allowlist.py

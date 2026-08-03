@@ -1,0 +1,8 @@
+# CODEOWNERS — defines who must review changes to specific paths.
+# GitLab/GitHub use this file to auto-request reviewers on PRs.
+#
+# Syntax: <pattern> <@user or @team>
+# Example (uncomment and replace with your team):
+#   * @platrel/platform-team
+#   runbooks/ @platrel/sre
+#   postmortems/ @platrel/sre

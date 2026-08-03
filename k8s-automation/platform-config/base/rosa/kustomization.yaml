@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - common-labels-configmap.yaml
+
+commonLabels:
+  platform.io/team: platrel
+  platform.io/managed-by: kustomize
+  platform.io/platform: rosa
+
+labels:
+  - pairs:
+      platform.io/team: platrel
+      platform.io/managed-by: kustomize
+    includeSelectors: false

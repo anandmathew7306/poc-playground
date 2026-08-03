@@ -1,0 +1,22 @@
+apiVersion: platform.io/v1
+kind: SLODefinition
+metadata:
+  name: acme-slos
+  client: acme
+spec:
+  services:
+    - name: api-gateway
+      slos:
+        - name: availability
+          target: 99.9
+          window: 30d
+          indicator:
+            type: request_based
+            good_events: |
+              sum(rate(http_requests_total{job="api-gateway",code!~"5.."}[5m]))
+            total_events: |
+              sum(rate(http_requests_total{job="api-gateway"}[5m]))
+        - name: latency
+          target: 95.0
+          threshold_ms: 500
+          window: 30d

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform-monitoring
+  labels:
+    platform.io/client: internal
+    platform.io/environment: prod
+    platform.io/platform: ocp
+    platform.io/managed-by: kustomize
+    platform.io/team: platrel
+    openshift.io/cluster-monitoring: "true"
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

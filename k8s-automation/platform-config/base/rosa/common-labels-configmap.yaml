@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platrel-common-labels
+  namespace: openshift-gitops
+  labels:
+    platform.io/team: platrel
+    platform.io/managed-by: kustomize
+data:
+  # Reference copy of required platform.io labels applied via Kustomize commonLabels.
+  # Client and environment values are set in client overlays.
+  labels.yaml: |
+    platform.io/client: ""        # client slug — set in overlay
+    platform.io/environment: ""   # prod | nonprod | dev — set in overlay
+    platform.io/platform: rosa    # ocp | rosa | rosa-hcp | eks
+    platform.io/managed-by: kustomize
+    platform.io/team: platrel

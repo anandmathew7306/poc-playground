@@ -1,0 +1,55 @@
+apiVersion: platform.io/v1
+kind: ClientProfile
+metadata:
+  name: acme
+  created_at: "2026-01-15"
+  updated_at: "2026-06-01"
+spec:
+  display_name: Acme Corporation
+  description: E-commerce platform running on ROSA HCP, AWS, SOC2 compliant
+
+  platform: rosa-hcp
+  platform_skill: platform/rosa-hcp
+  cloud: aws
+  cloud_skill: cloud/aws
+  deploy_tool: kustomize
+  deploy_skill: deploy/kustomize
+
+  acm:
+    managed: true
+    policy_set: acme-policy-set
+    placement: acme-placement
+
+  sre:
+    slo_file: slos/acme.yaml
+    alerting: pagerduty
+    observability_skill: observability/prometheus
+    dashboard_url: https://grafana.example.com/d/acme
+
+  docs:
+    style: confluence
+    space_url: https://acme.atlassian.net/wiki/spaces/PLATFORM
+    runbook_path: platform-ops/runbooks/
+
+  compliance:
+    frameworks:
+      - SOC2
+    data_classification: confidential
+    audit_logging: true
+
+  terminology:
+    environment_names:
+      prod: production
+      nonprod: staging
+    cluster_naming: acme-[env]-[region]
+    ticket_prefix: ACME
+
+  active_skills:
+    - core
+    - platform/rosa-hcp
+    - cloud/aws
+    - deploy/kustomize
+    - acm/policies
+    - observability/prometheus
+    - troubleshooting/ocp-nodes
+    - troubleshooting/ocp-operators

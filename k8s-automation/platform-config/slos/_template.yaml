@@ -1,0 +1,20 @@
+apiVersion: platform.io/v1
+kind: SLODefinition
+metadata:
+  name: ""
+  client: ""
+spec:
+  services:
+    - name: ""
+      slos:
+        - name: availability
+          target: 99.9
+          window: 30d
+          indicator:
+            type: request_based
+            good_events: ""   # PromQL
+            total_events: ""  # PromQL
+        - name: latency
+          target: 95.0        # 95% of requests under threshold
+          threshold_ms: 500
+          window: 30d

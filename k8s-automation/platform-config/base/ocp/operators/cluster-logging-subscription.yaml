@@ -1,0 +1,18 @@
+# Minimal subscription stub for cluster-logging operator.
+# Enable by uncommenting resources in operators/kustomization.yaml and
+# creating the openshift-logging namespace + OperatorGroup first.
+#
+# apiVersion: operators.coreos.com/v1alpha1
+# kind: Subscription
+# metadata:
+#   name: cluster-logging
+#   namespace: openshift-logging
+#   labels:
+#     platform.io/team: platrel
+#     platform.io/managed-by: kustomize
+# spec:
+#   channel: stable
+#   installPlanApproval: Automatic
+#   name: cluster-logging
+#   source: redhat-operators
+#   sourceNamespace: openshift-marketplace

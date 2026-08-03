@@ -1,0 +1,23 @@
+apiVersion: platform.io/v1
+kind: ClusterContacts
+metadata:
+  name: acme-prod
+spec:
+  client: acme
+  primary_contact:
+    name: Jane Smith
+    email: jane.smith@acme.example.com
+    slack: "@jane-acme"
+  escalation:
+    - level: 1
+      contact: jane.smith@acme.example.com
+      method: slack
+    - level: 2
+      contact: cto@acme.example.com
+      method: phone
+  oncall:
+    schedule: https://pagerduty.example.com/schedules/acme
+    sla:
+      p1_response: 30m
+      p2_response: 4h
+      p3_response: next business day

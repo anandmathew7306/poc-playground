@@ -1,0 +1,23 @@
+apiVersion: platform.io/v1
+kind: ClusterContacts
+metadata:
+  name: ""
+spec:
+  client: ""
+  primary_contact:
+    name: ""
+    email: ""
+    slack: ""
+  escalation:
+    - level: 1
+      contact: ""
+      method: ""            # slack | pagerduty | phone
+    - level: 2
+      contact: ""
+      method: ""
+  oncall:
+    schedule: ""            # link to PagerDuty/OpsGenie schedule
+    sla:
+      p1_response: ""       # e.g. 30m
+      p2_response: ""       # e.g. 4h
+      p3_response: ""       # e.g. next business day

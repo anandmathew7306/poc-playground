@@ -1,0 +1,24 @@
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: acme-placement
+  namespace: open-cluster-management
+  labels:
+    platform.io/client: acme
+    platform.io/team: platrel
+    platform.io/managed-by: kustomize
+spec:
+  predicates:
+    - requiredClusterSelector:
+        labelSelector:
+          matchLabels:
+            platform.io/client: acme
+          matchExpressions:
+            - key: platform.io/environment
+              operator: In
+              values:
+                - prod
+                - nonprod
+  tolerations:
+    - key: cluster.open-cluster-management.io/unavailable
+      operator: Exists

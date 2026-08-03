@@ -1,0 +1,22 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate changelog
+        run: |
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD \
+            --pretty=format:"- %s" > CHANGELOG_ENTRY.md
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: CHANGELOG_ENTRY.md
+          files: |
+            CHANGELOG_ENTRY.md

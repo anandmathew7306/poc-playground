@@ -1,0 +1,21 @@
+apiVersion: platform.io/v1
+kind: ClusterInfo
+metadata:
+  name: acme-prod
+  environment: prod
+spec:
+  platform: rosa-hcp
+  version: "4.15"
+  region: eu-west-1
+  cloud: aws
+  addons:
+    - aws-ebs-csi-driver
+    - aws-load-balancer-controller
+    - openshift-gitops
+  acm:
+    managed: true
+    hub: false
+  skills:
+    platform_skill: platform/rosa-hcp
+    cloud_skill: cloud/aws
+  notes: Production cluster. SOC2 scope. No direct SSH access.

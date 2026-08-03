@@ -1,0 +1,45 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: require-platform-labels
+  namespace: open-cluster-management
+  labels:
+    platform.io/team: platrel
+    platform.io/managed-by: kustomize
+    policy.open-cluster-management.io/root-policy: require-platform-labels
+  annotations:
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: policy.open-cluster-management.io/v1
+        kind: ConfigurationPolicy
+        metadata:
+          name: require-platform-labels
+        spec:
+          remediationAction: enforce
+          severity: medium
+          namespaceSelector:
+            include:
+              - "*"
+            exclude:
+              - "openshift-*"
+              - "kube-*"
+              - "default"
+              - "open-cluster-management*"
+          object-templates:
+            - complianceType: musthave
+              objectDefinition:
+                apiVersion: v1
+                kind: Namespace
+                metadata:
+                  labels:
+                    platform.io/client: ""
+                    platform.io/environment: ""
+                    platform.io/platform: ""
+                    platform.io/managed-by: ""
+                    platform.io/team: platrel

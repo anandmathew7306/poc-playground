@@ -1,0 +1,43 @@
+rules:
+  - id: skill-credential-exfil
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $...SSH_KEY.../.ssh...
+          - pattern: |
+              $...AWS_SECRET...
+          - pattern: |
+              $...curl.*webhook...
+          - pattern: |
+              $...base64.*decode.*exec...
+    message: |
+      Potential credential exfiltration in SKILL.md.
+      Review carefully before merging.
+    languages: [generic]
+    severity: ERROR
+    paths:
+      include:
+        - "**/*.md"
+
+  - id: skill-prompt-injection
+    patterns:
+      - pattern-either:
+          - pattern: |
+              ignore previous instructions
+          - pattern: |
+              override safety
+          - pattern: |
+              disregard your
+    message: Potential prompt injection attempt in skill content.
+    languages: [generic]
+    severity: ERROR
+    paths:
+      include:
+        - "**/*.md"
+
+  - id: skill-curl-bash
+    pattern: |
+      curl $URL | bash
+    message: curl-pipe-bash is prohibited in skills.
+    languages: [generic]
+    severity: ERROR

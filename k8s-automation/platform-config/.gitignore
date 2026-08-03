@@ -1,0 +1,35 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+*.kubeconfig
+kubeconfig
+secrets/
+*.secret.yaml
+
+# Terraform / OpenTofu
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Kustomize build output
+kustomize-build/
+
+# Helm
+charts/*.tgz
+
+# Python
+__pycache__/
+.venv/

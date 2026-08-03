@@ -1,0 +1,16 @@
+# Template ClusterRoleBinding — replace subject name/group before applying to a cluster.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: platrel-viewer-binding
+  labels:
+    platform.io/team: platrel
+    platform.io/managed-by: kustomize
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: platrel-viewer
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: platrel-viewers  # replace with client-specific OIDC group

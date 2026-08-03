@@ -1,0 +1,15 @@
+apiVersion: policy.open-cluster-management.io/v1beta1
+kind: PolicySet
+metadata:
+  name: acme-policy-set
+  namespace: open-cluster-management
+  labels:
+    platform.io/client: acme
+    platform.io/team: platrel
+    platform.io/managed-by: kustomize
+spec:
+  description: >
+    Baseline governance policies for Acme Corporation clusters.
+    Referenced by clients/acme/profile.yaml (spec.acm.policy_set).
+  policies:
+    - require-platform-labels

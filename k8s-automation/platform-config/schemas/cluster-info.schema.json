@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://platform.io/schemas/cluster-info.schema.json",
+  "title": "ClusterInfo",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "platform.io/v1" },
+    "kind": { "const": "ClusterInfo" },
+    "metadata": {
+      "type": "object",
+      "required": ["name", "environment"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "environment": {
+          "type": "string",
+          "enum": ["prod", "nonprod", "dev"]
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["platform", "version", "region", "cloud"],
+      "properties": {
+        "platform": {
+          "type": "string",
+          "enum": ["ocp", "rosa", "rosa-hcp", "eks"]
+        },
+        "version": { "type": "string", "minLength": 1 },
+        "region": { "type": "string", "minLength": 1 },
+        "cloud": {
+          "type": "string",
+          "enum": ["aws", "azure", "on-prem"]
+        },
+        "addons": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "acm": {
+          "type": "object",
+          "properties": {
+            "managed": { "type": "boolean" },
+            "hub": { "type": "boolean" }
+          }
+        },
+        "skills": {
+          "type": "object",
+          "properties": {
+            "platform_skill": { "type": "string" },
+            "cloud_skill": { "type": "string" }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

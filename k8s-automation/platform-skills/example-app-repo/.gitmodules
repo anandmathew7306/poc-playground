@@ -1,0 +1,4 @@
+[submodule "platform-skills"]
+	path = .cursor/skills
+	url = git@github.com:[org]/platform-skills.git
+	branch = main
