@@ -5,3 +5,6 @@ __pycache__/
 report.md
 *-report.md
 *.report.md
+
+# local env files contain credentials and client identifiers — never commit
+.env
