@@ -8,3 +8,6 @@ report.md
 
 # local env files contain credentials and client identifiers — never commit
 .env
+
+# per-machine cluster catalog (copy from clusters.yaml.example)
+cluster-login/clusters.yaml

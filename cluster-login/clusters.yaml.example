@@ -1,0 +1,28 @@
+# Generic catalog for cluster-login.
+# Copy to clusters.yaml (or point CLUSTER_LOGIN_CONFIG at a local file).
+# Do not put passwords here. Use ~/.ssh/.<client>_pass (chmod 600).
+
+clients:
+  lab:
+    username: kubeadmin
+    password_file: ~/.ssh/.lab_pass
+    groups:
+      Non-prod:
+        - id: lab-nn
+          name: Lab NN
+          server: https://api.example.invalid:6443
+          auth: oc-password
+          insecure_skip_tls_verify: true
+      Prod:
+        - id: lab-ek
+          name: Lab EK
+          server: https://api.prod.example.invalid:6443
+          auth: oc-password
+          insecure_skip_tls_verify: true
+
+  cloud:
+    clusters:
+      - id: sandbox
+        name: Sandbox
+        auth: kubeconfig
+        kubeconfig: ~/.kube/sandbox.yaml
