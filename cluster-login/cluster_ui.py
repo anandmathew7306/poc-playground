@@ -110,28 +110,67 @@ def fortinet_state():
     return "down"
 
 
+def _zerotier_cli(cli, *args):
+    r = _run([cli, *args])
+    if r is not None and r.returncode == 0:
+        return r
+    sudo = shutil.which("sudo")
+    if sudo:
+        r = _run([sudo, "-n", cli, *args])
+        if r is not None and r.returncode == 0:
+            return r
+    return None
+
+
+def _zerotier_network_rows(stdout):
+    rows = []
+    for ln in (stdout or "").splitlines():
+        s = ln.strip()
+        if not s:
+            continue
+        low = s.lower()
+        if low.startswith("nwid") or "<nwid>" in low:
+            continue
+        rows.append(s)
+    return rows
+
+
+def _zt_iface_up():
+    for name in _ifaces():
+        if not name.startswith("zt"):
+            continue
+        oper = Path("/sys/class/net") / name / "operstate"
+        try:
+            if oper.read_text().strip() == "up":
+                return True
+        except OSError:
+            continue
+    return False
+
+
 def zerotier_state():
     cli = shutil.which("zerotier-cli")
     if not cli and not shutil.which("zerotier-one"):
         return "not found"
     if cli:
-        nets = _run([cli, "listnetworks"])
-        if nets is not None and nets.returncode == 0 and (nets.stdout or "").strip():
-            body = nets.stdout.strip().splitlines()
-            rows = [ln for ln in body if ln.strip() and not ln.lower().startswith("nwid")]
+        nets = _zerotier_cli(cli, "listnetworks")
+        if nets is not None:
+            rows = _zerotier_network_rows(nets.stdout)
             if any(re.search(r"\bOK\b", ln) for ln in rows):
                 return "up"
-        info = _run([cli, "status"]) or _run([cli, "info"])
-        if info is not None and info.returncode == 0:
+            # Queried successfully: leave/stop leaves the daemon and a DOWN zt*
+            # iface behind. That is not VPN-up.
+            return "down"
+        info = _zerotier_cli(cli, "status") or _zerotier_cli(cli, "info")
+        if info is not None:
             out = info.stdout or ""
             if "OFFLINE" in out:
                 return "down"
             if "ONLINE" in out:
                 # Daemon is up; still need a joined network to count as VPN.
                 pass
-    for name in _ifaces():
-        if name.startswith("zt"):
-            return "up"
+    if _zt_iface_up():
+        return "up"
     if _proc_running("zerotier-one"):
         return "down"
     return "down"
