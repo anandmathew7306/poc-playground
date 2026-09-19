@@ -1,0 +1,14 @@
+---
+description: Use the git identity that matches this folder
+alwaysApply: true
+---
+
+# Git identity
+
+Commit as `Your Name <you@example.com>`.
+
+- Do not override local git `user.*`.
+- Hosting account for this tree: `your-github-user` (or the GitLab user for this folder).
+- Confirm with the user before any push.
+
+If this workspace has more than one client or org tree, spell the mapping in a table (folder → email → account) instead of a single line.

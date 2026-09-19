@@ -1,0 +1,11 @@
+---
+description: Python conventions for this repo
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python
+
+- Prefer `python3` and an explicit venv or the project’s documented runner.
+- Do not swallow exceptions. Log or re-raise with context.
+- Keep scripts runnable from the repo root unless the README says otherwise.
