@@ -1,0 +1,5 @@
+# Delete the default Flannel document Talos v1.14+ emits.
+# Apply to all nodes: --config-patch @patch-cni.yaml
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete

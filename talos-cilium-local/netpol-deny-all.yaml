@@ -1,0 +1,11 @@
+# Apply after confirming open traffic, then re-test wget.
+# Expect timeout if Cilium is enforcing.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: netpol-test
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress

@@ -1,0 +1,6 @@
+# Disable kube-proxy so Cilium can replace it.
+# Control-plane only: --config-patch-controlplanes @patch-proxy.yaml
+# Do not share this via --config-patch; KubeProxyConfig is CP-only.
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+enabled: false

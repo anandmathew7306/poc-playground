@@ -1,0 +1,12 @@
+# Load NVIDIA kernel modules after the system extensions are installed.
+# Extensions alone do not insmod nvidia.ko.
+# Apply with: talosctl patch mc --patch @gpu-worker-patch.yaml ...
+machine:
+  kernel:
+    modules:
+      - name: nvidia
+      - name: nvidia_uvm
+      - name: nvidia_drm
+      - name: nvidia_modeset
+  sysctls:
+    net.core.bpf_jit_harden: 1

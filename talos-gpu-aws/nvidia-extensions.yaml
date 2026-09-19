@@ -1,0 +1,7 @@
+# POST to Image Factory (or select the same pair in the web UI).
+# Talos 1.8.0+ uses LTS / Production tracks, not the old un-suffixed names.
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/nvidia-open-gpu-kernel-modules-lts
+      - siderolabs/nvidia-container-toolkit-lts

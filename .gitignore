@@ -11,3 +11,9 @@ report.md
 
 # per-machine cluster catalog (copy from clusters.yaml.example)
 cluster-login/clusters.yaml
+
+# Talos/AWS lab secrets and generated machine configs — never commit
+talos-gpu-aws/kubeconfig
+talos-gpu-aws/talosconfig
+talos-gpu-aws/controlplane.yaml
+talos-gpu-aws/worker.yaml
