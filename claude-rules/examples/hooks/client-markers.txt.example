@@ -1,0 +1,12 @@
+# Client markers: one regex per line (case-insensitive). Lines starting with # are ignored.
+# A commit to a PUBLIC repo is blocked if any added line matches one of these.
+# Copy to ~/.claude/hooks/client-markers.txt and replace the examples with real values.
+
+# Client and org names (word boundaries stop "acme" matching inside other words)
+(?<![a-z0-9])acme(?![a-z0-9])
+acme-corp
+# Cluster and domain names
+prod-cluster-01
+\.acme\.internal
+# Real client subnets (sample IPs elsewhere are fine)
+(?<![0-9])10\.42\.[0-9]

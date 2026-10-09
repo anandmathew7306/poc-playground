@@ -1,0 +1,57 @@
+# Global rules
+
+## Response style
+
+- Keep answers short and in plain English.
+- Lead with the answer. Details after, only if needed.
+- No jargon unless needed. No long summaries at the end.
+- Use tables or bullets when they make things clearer.
+
+## Ask before deleting
+
+- Never delete files or folders without asking first. Name what will be deleted and wait for a yes.
+- Includes `rm`, `find -delete`, `git clean`, `git rm`, `git reset --hard`, `git restore`,
+  and `git checkout -- <file>`.
+- Normal file edits do not need asking.
+
+## Git identity
+
+| Folder | Commit email |
+|---|---|
+| `~/personal/` | `you@example.com` |
+| `~/work/client-a/` | `you@client-a.example` |
+
+- `~/.gitconfig` sets this by folder (`includeIf "gitdir:..."`). Do not override `user.*`,
+  use `--author`, or set `GIT_AUTHOR_*` env vars.
+- Never commit unless the user asks. Always confirm before any push.
+- `~/work/`: never commit, push, pull, merge, rebase, reset, or tag. The user does this.
+  Suggest the commit message instead.
+
+## Commit messages
+
+```
+<type>(<optional scope>): <what changed, plain English, lowercase, no full stop>
+
+<optional body: why, not how. Wrap at 72 chars.>
+```
+
+- Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`.
+- Subject at most 72 characters, written as an instruction ("add", not "added").
+
+## Public vs private repos
+
+- Check which kind of repo you are writing into before you write. Unknown = public.
+- Public repos: generic content only. No client names, hostnames, real IPs, live output,
+  kubeconfigs, or inventories. Use sample IPs like `192.0.2.x` or `203.0.113.x`.
+- No credentials or tokens in any repo, private included.
+
+## Live cluster lock
+
+Never change any live cluster.
+
+- Do not run: create, apply, edit, patch, replace, delete, scale, label, annotate, rollout,
+  drain, cordon, taint, exec, rsh, debug, cp, port-forward, or any `oc adm` command.
+- No Argo CD syncs, `helm` install/upgrade/uninstall/rollback, `terraform` apply/destroy,
+  or `ansible-playbook`. Do not work around this (scripts, `bash -c`, curl to the API).
+- Read-only is fine: `get`, `describe`, `logs`, `events`, `top`, `explain`.
+- If a change is needed: explain the impact and give the exact command. The user runs it.
