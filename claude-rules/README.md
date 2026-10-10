@@ -43,6 +43,8 @@ the agent. Printing a `permissionDecision: "ask"` JSON makes Claude Code prompt 
 |---|---|
 | [`block-cluster-writes.py`](examples/hooks/block-cluster-writes.py) | Blocks `oc`/`kubectl`/`helm`/`argocd`/`terraform` write verbs anywhere in a command, including after flags, `&&`, `$(...)`, and `bash -c` |
 | [`confirm-deletes.py`](examples/hooks/confirm-deletes.py) | Asks before `rm`, `find -delete`, `git clean`, `git reset --hard`, etc. Claude's own temp folder is exempt |
+| [`confirm-cloud.py`](examples/hooks/confirm-cloud.py) | Asks before any `aws`/`linode-cli`/`rosa`/`az`/`gcloud` command that is not on a read-only allowlist, and before commands that print secrets |
+| [`confirm-secrets.py`](examples/hooks/confirm-secrets.py) | Asks before `get secret -o yaml/json`, and before reading kubeconfigs, cloud credentials, private keys, pull secrets, or `.env` files (shell, Read, and Grep) |
 | [`check-git-identity.py`](examples/hooks/check-git-identity.py) | Blocks commits with the wrong email for the folder, asks before every push, and blocks all history writes under `~/work/` |
 | [`protect-repos.py`](examples/hooks/protect-repos.py) | Looks up repo visibility on GitHub (`gh`, cached a day; unknown = public). Scans commits to public repos for client markers and secrets. Blocks edits in reference-only repos |
 

@@ -16,8 +16,16 @@
         "hooks": [
           { "type": "command", "command": "~/.claude/hooks/block-cluster-writes.py" },
           { "type": "command", "command": "~/.claude/hooks/confirm-deletes.py" },
+          { "type": "command", "command": "~/.claude/hooks/confirm-cloud.py" },
+          { "type": "command", "command": "~/.claude/hooks/confirm-secrets.py" },
           { "type": "command", "command": "~/.claude/hooks/check-git-identity.py" },
           { "type": "command", "command": "~/.claude/hooks/protect-repos.py" }
+        ]
+      },
+      {
+        "matcher": "Read|Grep",
+        "hooks": [
+          { "type": "command", "command": "~/.claude/hooks/confirm-secrets.py" }
         ]
       },
       {
