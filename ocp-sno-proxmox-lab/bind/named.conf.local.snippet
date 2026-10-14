@@ -1,0 +1,5 @@
+// Append to /etc/bind/named.conf.local (back it up first).
+zone "example.lab" {
+    type master;
+    file "/etc/bind/db.example.lab";
+};

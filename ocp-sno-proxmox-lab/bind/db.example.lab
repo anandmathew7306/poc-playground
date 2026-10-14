@@ -1,0 +1,14 @@
+$TTL 300
+@       IN SOA  ns.example.lab. admin.example.lab. (
+                2026101201 ; serial (raise on every change)
+                3600       ; refresh
+                600        ; retry
+                604800     ; expire
+                300 )      ; negative cache
+@       IN NS   ns.example.lab.
+ns      IN A    192.0.2.9
+
+; Single-node OpenShift "poc": everything points to the one node
+api.poc         IN A    192.0.2.20
+api-int.poc     IN A    192.0.2.20
+*.apps.poc      IN A    192.0.2.20
