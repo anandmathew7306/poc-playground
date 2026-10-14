@@ -1,0 +1,63 @@
+# Identity for the backup automation, and the least it needs:
+# read namespaces (cluster-wide), manage Schedules (openshift-adp only).
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backup-automation
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: label-scheduler
+  namespace: backup-automation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: label-scheduler-read-namespaces
+rules:
+  - apiGroups: [""]
+    resources: [namespaces]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: label-scheduler-read-namespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: label-scheduler-read-namespaces
+subjects:
+  - kind: ServiceAccount
+    name: label-scheduler
+    namespace: backup-automation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: label-scheduler-manage-schedules
+  namespace: openshift-adp
+rules:
+  - apiGroups: [velero.io]
+    resources: [schedules]
+    verbs: [get, list, create, update, patch, delete]
+  # First backup for a newly labelled namespace. Create only: cannot read, change or delete backups.
+  - apiGroups: [velero.io]
+    resources: [backups]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: label-scheduler-manage-schedules
+  namespace: openshift-adp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: label-scheduler-manage-schedules
+subjects:
+  - kind: ServiceAccount
+    name: label-scheduler
+    namespace: backup-automation

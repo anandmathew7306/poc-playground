@@ -1,0 +1,12 @@
+# One-off backup of demo-app to test the setup: snapshot the disk and copy it to S3 (same flags as the weekly).
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: demo-app-test-1
+  namespace: openshift-adp
+spec:
+  includedNamespaces: [demo-app]
+  snapshotVolumes: true
+  snapshotMoveData: true
+  storageLocation: default
+  ttl: 24h0m0s

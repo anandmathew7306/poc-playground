@@ -1,0 +1,111 @@
+# Backup automation: settings + script.
+# A namespace labelled backup=true gets <ns>-daily and <ns>-weekly Schedules.
+# Label removed / not "true" -> those two Schedules are deleted. Past Backups stay until their ttl.
+# Only Schedules with app.kubernetes.io/managed-by=label-scheduler are ever touched.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: label-scheduler-settings
+  namespace: backup-automation
+data:
+  OADP_NAMESPACE: openshift-adp
+  STORAGE_LOCATION: default
+  # Daily: snapshot only (stays on the storage): fast local restore point.
+  DAILY_CRON: "0 1 * * *"
+  DAILY_TTL: 30h0m0s
+  # Weekly: snapshot + copy to S3: the off-site copy.
+  WEEKLY_CRON: "0 2 * * 6"
+  WEEKLY_TTL: 360h0m0s
+  # New namespace: also take one backup right away (weekly settings), so it is protected at once.
+  # (A new Schedule waits for its first cron time; it does not run immediately here.)
+  INITIAL_BACKUP: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: label-scheduler-script
+  namespace: backup-automation
+data:
+  sync.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    MANAGED="app.kubernetes.io/managed-by=label-scheduler"
+
+    # 1. Namespaces that want backups
+    wanted=$(oc get namespaces -l backup=true -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
+    echo "wanted: ${wanted:-<none>}" | tr '\n' ' '; echo
+
+    # 2. Make sure each has a daily and a weekly Schedule
+    for ns in $wanted; do
+      for type in daily weekly; do
+        if [ "$type" = daily ]; then cron=$DAILY_CRON; ttl=$DAILY_TTL; move=false
+        else cron=$WEEKLY_CRON; ttl=$WEEKLY_TTL; move=true; fi
+        name="${ns}-${type}"
+        new=false
+        if oc get schedule "$name" -n "$OADP_NAMESPACE" >/dev/null 2>&1; then
+          echo "keep    $name"
+        else
+          echo "create  $name"
+          new=true
+        fi
+        oc apply -f - >/dev/null <<EOF
+    apiVersion: velero.io/v1
+    kind: Schedule
+    metadata:
+      name: ${name}
+      namespace: ${OADP_NAMESPACE}
+      labels:
+        app.kubernetes.io/managed-by: label-scheduler
+        backup-automation/namespace: ${ns}
+        backup-automation/type: ${type}
+    spec:
+      schedule: "${cron}"
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/managed-by: label-scheduler
+            backup-automation/namespace: ${ns}
+            backup-automation/type: ${type}
+        includedNamespaces: [${ns}]
+        snapshotVolumes: true
+        snapshotMoveData: ${move}
+        storageLocation: ${STORAGE_LOCATION}
+        ttl: ${ttl}
+    EOF
+        # First backup now, only when the weekly Schedule was just created
+        if [ "$type" = weekly ] && [ "$new" = true ] && [ "${INITIAL_BACKUP:-false}" = true ]; then
+          bname="${ns}-initial-$(date -u +%Y%m%d%H%M%S)"
+          echo "backup  $bname"
+          oc create -f - >/dev/null <<EOF
+    apiVersion: velero.io/v1
+    kind: Backup
+    metadata:
+      name: ${bname}
+      namespace: ${OADP_NAMESPACE}
+      labels:
+        app.kubernetes.io/managed-by: label-scheduler
+        backup-automation/namespace: ${ns}
+        backup-automation/type: initial
+    spec:
+      includedNamespaces: [${ns}]
+      snapshotVolumes: true
+      snapshotMoveData: true
+      storageLocation: ${STORAGE_LOCATION}
+      ttl: ${WEEKLY_TTL}
+    EOF
+        fi
+      done
+    done
+
+    # 3. Remove our Schedules whose namespace no longer wants backups
+    oc get schedules -n "$OADP_NAMESPACE" -l "$MANAGED" \
+      -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.labels.backup-automation/namespace}{"\n"}{end}' |
+    while read -r name ns; do
+      [ -z "$name" ] && continue
+      if ! grep -qx "$ns" <<<"$wanted"; then
+        echo "delete  $name"
+        oc delete schedule "$name" -n "$OADP_NAMESPACE"
+      fi
+    done
+    echo "done"

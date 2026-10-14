@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OADP Backup Automation</title>
+<style>
+:root{
+  --bg:#f4f5f8; --panel:#ffffff; --ink:#1d2330; --muted:#6b7385; --line:#e1e4ea;
+  --idle-fill:#ffffff; --idle-stroke:#c6ccd7;
+  --accent:#d6336c; --accent-soft:#fbe3ec; --past:#ebb8ca;
+  --gone:#9aa1af;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#11141b; --panel:#191d27; --ink:#e7eaf0; --muted:#99a1b2; --line:#2c3240;
+    --idle-fill:#1d2230; --idle-stroke:#3a4152;
+    --accent:#ff6b9a; --accent-soft:#3a1f2b; --past:#7a3e55;
+    --gone:#5d6475;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1640px;margin:0 auto;padding:28px 32px;min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:44px}
+@media (max-width:640px){.wrap{padding:16px;gap:16px}}
+
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px}
+h1{font-size:1.8rem;line-height:1.2;margin:0;letter-spacing:-.01em}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 18px;border-radius:999px;cursor:pointer;font:inherit;font-size:.95rem}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;
+      box-shadow:0 1px 2px rgba(20,25,40,.04)}
+.stage{padding:32px 40px;display:grid}
+@media (max-width:640px){.stage{padding:16px}}
+svg.d{grid-area:1/1;align-self:center;visibility:hidden;width:100%;height:auto;max-height:calc(100vh - 280px)}
+svg.d.show{visibility:visible}
+
+.node rect{fill:var(--idle-fill);stroke:var(--idle-stroke);stroke-width:1.5;transition:fill .25s,stroke .25s}
+.node .t{fill:var(--ink);font-weight:600;font-size:19px}
+.node .s{fill:var(--muted);font-size:15px}
+.node.past rect{stroke:var(--past);stroke-width:2}
+.node.on rect{fill:var(--accent-soft);stroke:var(--accent);stroke-width:2.5}
+.node.gone rect{fill:none;stroke:var(--gone);stroke-dasharray:6 5}
+.node.gone .t{fill:var(--gone);text-decoration:line-through}
+.node.gone .s{fill:var(--gone)}
+.edge path{fill:none;stroke:var(--idle-stroke);stroke-width:2;transition:stroke .25s}
+.edge text{fill:var(--muted);font-size:14px}
+.edge.past path{stroke:var(--past)}
+.edge.on path{stroke:var(--accent);stroke-width:2.5;stroke-dasharray:8 6;animation:flow 1s linear infinite}
+.edge.on text{fill:var(--accent);font-weight:600}
+@keyframes flow{to{stroke-dashoffset:-14}}
+@media (prefers-reduced-motion: reduce){.edge.on path{animation:none}}
+
+footer{border-top:1px solid var(--line);padding:18px 40px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px}
+@media (max-width:640px){footer{padding:14px 16px}}
+.cap{font-size:1.2rem;font-weight:600;line-height:1.4;margin:0;flex:1 1 420px;min-height:1.4em}
+.nav{display:flex;align-items:center;gap:10px}
+.counter{color:var(--muted);font-size:.9rem;margin-right:6px;font-variant-numeric:tabular-nums}
+.btn{font:inherit;font-size:.95rem;padding:9px 22px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+@media (max-width:640px){.cap{font-size:1.05rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>OADP Backup Automation</h1>
+    <div class="tabs" role="tablist" id="tabs"></div>
+  </header>
+
+  <div class="card">
+    <div class="stage">
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/>
+          </marker>
+        </defs>
+      </svg>
+
+      <!-- Add a namespace -->
+      <svg class="d" id="d-onboard" viewBox="0 20 1080 372" role="img" aria-label="Namespace to CronJob; CronJob creates Schedules and a first backup; both lead to Backup, then disk snapshot, then S3">
+        <g class="edge" id="a-e12"><path d="M190,206 L228,206" marker-end="url(#arr)"/></g>
+        <g class="edge" id="a-e23"><path d="M410,191 C432,191 428,61 448,61" marker-end="url(#arr)"/></g>
+        <g class="edge" id="a-e27"><path d="M410,221 C432,221 428,351 448,351" marker-end="url(#arr)"/></g>
+        <g class="edge" id="a-e34"><path d="M630,61 C652,61 648,191 668,191" marker-end="url(#arr)"/><text x="660" y="120">on schedule</text></g>
+        <g class="edge" id="a-e74"><path d="M630,351 C652,351 648,221 668,221" marker-end="url(#arr)"/><text x="660" y="300">right away</text></g>
+        <g class="edge" id="a-e45"><path d="M850,191 C872,191 868,61 888,61" marker-end="url(#arr)"/></g>
+        <g class="edge" id="a-e56"><path d="M980,92 L980,318" marker-end="url(#arr)"/><text x="992" y="210">copy</text></g>
+
+        <g class="node" id="a-n1"><rect x="10" y="175" width="180" height="62" rx="10"/>
+          <text class="t" x="26" y="203">Namespace</text><text class="s" x="26" y="225">label backup=true</text></g>
+        <g class="node" id="a-n2"><rect x="230" y="175" width="180" height="62" rx="10"/>
+          <text class="t" x="246" y="203">CronJob</text><text class="s" x="246" y="225">every minute</text></g>
+        <g class="node" id="a-n3"><rect x="450" y="30" width="180" height="62" rx="10"/>
+          <text class="t" x="466" y="58">Schedules</text><text class="s" x="466" y="80">daily + weekly</text></g>
+        <g class="node" id="a-n7"><rect x="450" y="320" width="180" height="62" rx="10"/>
+          <text class="t" x="466" y="348">First backup</text><text class="s" x="466" y="370">once, at onboarding</text></g>
+        <g class="node" id="a-n4"><rect x="670" y="175" width="180" height="62" rx="10"/>
+          <text class="t" x="686" y="203">Backup</text><text class="s" x="686" y="225">OADP / Velero</text></g>
+        <g class="node" id="a-n5"><rect x="890" y="30" width="180" height="62" rx="10"/>
+          <text class="t" x="906" y="58">Disk snapshot</text><text class="s" x="906" y="80">CSI storage</text></g>
+        <g class="node" id="a-n6"><rect x="890" y="320" width="180" height="62" rx="10"/>
+          <text class="t" x="906" y="348">S3 bucket</text><text class="s" x="906" y="370">any S3 target</text></g>
+      </svg>
+
+      <!-- Remove a namespace -->
+      <svg class="d" id="d-offboard" viewBox="0 160 1080 92" role="img" aria-label="Label removed; CronJob deletes the Schedules; past backups stay in S3">
+        <g class="edge" id="b-e12"><path d="M200,206 L298,206" marker-end="url(#arr)"/></g>
+        <g class="edge" id="b-e23"><path d="M490,206 L588,206" marker-end="url(#arr)"/><text x="512" y="194">deletes</text></g>
+
+        <g class="node" id="b-n1"><rect x="10" y="175" width="190" height="62" rx="10"/>
+          <text class="t" x="26" y="203">Namespace</text><text class="s" x="26" y="225">label removed</text></g>
+        <g class="node" id="b-n2"><rect x="300" y="175" width="190" height="62" rx="10"/>
+          <text class="t" x="316" y="203">CronJob</text><text class="s" x="316" y="225">every minute</text></g>
+        <g class="node" id="b-n3"><rect x="590" y="175" width="190" height="62" rx="10"/>
+          <text class="t" x="606" y="203">Schedules</text><text class="s" x="606" y="225">daily + weekly</text></g>
+        <g class="node" id="b-n8"><rect x="880" y="175" width="190" height="62" rx="10"/>
+          <text class="t" x="896" y="203">Past backups</text><text class="s" x="896" y="225">kept until expiry</text></g>
+      </svg>
+    </div>
+
+    <footer>
+      <p class="cap" id="cap"></p>
+      <div class="nav">
+        <span class="counter" id="counter"></span>
+        <button class="btn" id="back" type="button">Back</button>
+        <button class="btn primary" id="next" type="button">Next</button>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<script>
+// Each step: caption, active nodes/edges, nodes shown as deleted.
+const SCENARIOS = {
+  onboard: { title: "Add a namespace", prefix: "a-", steps: [
+    { cap: "Label the namespace. This is the only manual step.",
+      nodes: ["n1"], edges: [] },
+    { cap: "Within a minute, the CronJob finds the label.",
+      nodes: ["n1","n2"], edges: ["e12"] },
+    { cap: "The CronJob does two things: creates the Schedules, and starts a first backup.",
+      nodes: ["n2","n3","n7"], edges: ["e23","e27"] },
+    { cap: "The first backup runs right away.",
+      nodes: ["n7","n4"], edges: ["e74"] },
+    { cap: "The disk is snapshotted, then copied to S3. The first backup is complete.",
+      nodes: ["n4","n5","n6"], edges: ["e45","e56"] },
+    { cap: "From then on, the Schedules take over: same path, every day and every week.",
+      nodes: ["n3","n4","n5","n6"], edges: ["e34","e45","e56"] },
+  ]},
+  offboard: { title: "Remove a namespace", prefix: "b-", steps: [
+    { cap: "Remove the label.",
+      nodes: ["n1"], edges: [] },
+    { cap: "Within a minute, the CronJob deletes that namespace's Schedules.",
+      nodes: ["n1","n2"], edges: ["e12","e23"], gone: ["n3"] },
+    { cap: "Past backups stay in S3 until they expire.",
+      nodes: ["n8"], edges: [], gone: ["n3"] },
+  ]},
+};
+
+const KEYS = Object.keys(SCENARIOS);
+let scen = KEYS[0], idx = 0;
+const $ = id => document.getElementById(id);
+
+function render(){
+  $("tabs").innerHTML = KEYS.map(k =>
+    `<button class="tab" role="tab" aria-selected="${k===scen}" data-k="${k}" type="button">${SCENARIOS[k].title}</button>`).join("");
+  $("tabs").querySelectorAll(".tab").forEach(b => b.onclick = () => { scen = b.dataset.k; idx = 0; render(); });
+
+  KEYS.forEach(k => $("d-"+k).classList.toggle("show", k === scen));
+  const S = SCENARIOS[scen], st = S.steps[idx], svg = $("d-"+scen);
+  const past = new Set(), pastE = new Set();
+  S.steps.slice(0, idx).forEach(s => { s.nodes.forEach(n => past.add(n)); s.edges.forEach(e => pastE.add(e)); });
+  const gone = st.gone || [];
+  svg.querySelectorAll(".node").forEach(el => {
+    const n = el.id.slice(S.prefix.length);
+    el.classList.toggle("on", st.nodes.includes(n));
+    el.classList.toggle("gone", gone.includes(n));
+    el.classList.toggle("past", !st.nodes.includes(n) && !gone.includes(n) && past.has(n));
+  });
+  svg.querySelectorAll(".edge").forEach(el => {
+    const e = el.id.slice(S.prefix.length);
+    el.classList.toggle("on", st.edges.includes(e));
+    el.classList.toggle("past", !st.edges.includes(e) && pastE.has(e));
+  });
+
+  $("cap").textContent = st.cap;
+  $("counter").textContent = `${idx+1} / ${S.steps.length}`;
+  const k = KEYS.indexOf(scen), last = idx === S.steps.length-1;
+  $("back").disabled = idx === 0 && k === 0;
+  $("next").disabled = last && k === KEYS.length-1;
+  $("next").textContent = last && k < KEYS.length-1 ? "Next scenario" : "Next";
+}
+
+function step(d){
+  const k = KEYS.indexOf(scen), n = SCENARIOS[scen].steps.length;
+  if (d > 0) { if (idx < n-1) idx++; else if (k < KEYS.length-1) { scen = KEYS[k+1]; idx = 0; } }
+  else { if (idx > 0) idx--; else if (k > 0) { scen = KEYS[k-1]; idx = SCENARIOS[scen].steps.length-1; } }
+  render();
+}
+$("next").onclick = () => step(1);
+$("back").onclick = () => step(-1);
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight") step(1); if (e.key === "ArrowLeft") step(-1); });
+render();
+</script>
+</body>
+</html>

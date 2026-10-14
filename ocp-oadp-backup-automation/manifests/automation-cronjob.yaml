@@ -1,0 +1,34 @@
+# Runs sync.sh every minute (demo pace; a real setup would use e.g. every 15 min).
+# Image: the cluster's own oc image. Find it with:
+#   oc get istag cli:latest -n openshift -o jsonpath='{.image.dockerImageReference}'
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: label-scheduler
+  namespace: backup-automation
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          serviceAccountName: label-scheduler
+          restartPolicy: Never
+          containers:
+            - name: sync
+              image: <cli-image>   # from the command above
+              command: [bash, /scripts/sync.sh]
+              envFrom:
+                - configMapRef: {name: label-scheduler-settings}
+              resources:
+                requests: {cpu: 10m, memory: 64Mi}
+                limits: {memory: 256Mi}
+              volumeMounts:
+                - {name: script, mountPath: /scripts}
+          volumes:
+            - name: script
+              configMap: {name: label-scheduler-script}

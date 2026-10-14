@@ -1,0 +1,28 @@
+# OADP configuration: where backups go (AWS S3) and which features are on.
+# Needs: secret cloud-credentials (key: cloud) in openshift-adp.
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: dpa
+  namespace: openshift-adp
+spec:
+  configuration:
+    velero:
+      defaultPlugins: [openshift, aws, csi]
+    nodeAgent:
+      enable: true
+      uploaderType: kopia
+  backupLocations:
+    - name: default
+      velero:
+        provider: aws
+        default: true
+        credential:
+          name: cloud-credentials
+          key: cloud
+        objectStorage:
+          bucket: <bucket-name>
+          prefix: velero
+        config:
+          region: <aws-region>
+          # Other S3 (not AWS): add s3Url: https://<endpoint> and s3ForcePathStyle: "true"
