@@ -7,6 +7,7 @@ never read: Secrets are listed by name and type only.
 
 Usage:
     ocp-logging-forwarding-check.py <output-dir> [--namespace openshift-logging] [--logs 1h]
+                                    [--routing [--app-ns REGEX]]
 """
 
 import argparse
@@ -180,11 +181,85 @@ def collector_logs(outdir, ns, since):
     return len(pods_), by_comp, drops, sorted({b.split(":")[0] for b in brokers})
 
 
+INFRA_NS = re.compile(r"^(openshift-|openshift$|kube-|default$)")  # the 'infrastructure' input
+
+
+def target(o):
+    """(type, endpoint, topic, appName) of one output; Kafka may use url or brokers."""
+    t = o.get("type", "?")
+    x = o.get(t) or {}
+    ep = x.get("url") or o.get("url") or ",".join(x.get("brokers") or []) or "-"
+    return t, ep, x.get("topic") or "-", x.get("appName") or "-"
+
+
+def input_desc(i):
+    """Short description of a custom input: type and namespace selection."""
+    t = i.get("type") or next((k for k in ("application", "infrastructure", "audit", "receiver") if k in i), "?")
+    body = i.get(t) or {}
+    inc = [x.get("namespace") for x in body.get("includes", []) or []] + list(body.get("namespaces", []) or [])
+    exc = [x.get("namespace") for x in body.get("excludes", []) or []]
+    sel = body.get("selector")
+    parts = [f"type={t}"]
+    if inc:
+        parts.append(f"includes={inc}")
+    if exc:
+        parts.append(f"excludes={exc}")
+    if sel:
+        parts.append(f"selector={json.dumps(sel)}")
+    if t == "audit":
+        parts.append(f"sources={body.get('sources', 'all')}")
+    return ", ".join(parts)
+
+
+def routing(outdir, clfs, app_ns):
+    """Write routing.md: what each pipeline sends where, plus audit profile and app namespaces."""
+    L = ["# Log routing (read-only)", ""]
+    rc, out, err = oc("get", "apiservers.config.openshift.io", "cluster", "-o", "jsonpath={.spec.audit}")
+    L += [f"API server audit policy: `{out.strip() or '(default)'}`" if rc == 0 else f"API server audit policy: not readable ({err.strip()})", ""]
+    rc, out, _ = oc("get", "namespaces", "-o", "custom-columns=NAME:.metadata.name", "--no-headers")
+    nss = out.split() if rc == 0 else []
+    infra = [n for n in nss if INFRA_NS.match(n)]
+    L += [f"Namespaces: {len(nss)} ({len(infra)} infrastructure-type, {len(nss) - len(infra)} application-type)", ""]
+    if not clfs:
+        L += ["No ClusterLogForwarder found.", ""]
+    for api, item in clfs:
+        s, m = item.get("spec", {}), item["metadata"]
+        L += [f"## {api} API: {m['namespace']}/{m['name']}", ""]
+        filters = {f["name"]: f for f in s.get("filters", []) or []}
+        inputs = {i["name"]: i for i in s.get("inputs", []) or []}
+        outs = {o["name"]: o for o in s.get("outputs", []) or []}
+        L += ["| Pipeline | Inputs | Filters | Output | Type | Endpoint | Topic | appName |", "|---|---|---|---|---|---|---|---|"]
+        for p in s.get("pipelines", []) or []:
+            fdesc = []
+            for fn in p.get("filterRefs", []) or []:
+                f = filters.get(fn, {})
+                fdesc.append(f"{fn}{json.dumps(f.get('openshiftLabels'))}" if f.get("openshiftLabels") else f"{fn}({f.get('type', '?')})")
+            for on in p.get("outputRefs", []) or []:
+                t, ep, topic, app = target(outs.get(on, {"type": "default" if on == "default" else "?"}))
+                L.append(f"| {p.get('name', '-')} | {', '.join(p.get('inputRefs', []))} | {'; '.join(fdesc) or '-'} | {on} | {t} | `{ep}` | {topic} | {app} |")
+        L += ["", "Custom inputs:" if inputs else "Custom inputs: none"]
+        L += [f"- `{n}`: {input_desc(i)}" for n, i in inputs.items()]
+        L.append("")
+    if app_ns:
+        rx = re.compile(app_ns)
+        L += [f"## Application namespaces matching `{app_ns}`", "", "| Namespace | Pods | In 'application' input | In a custom input |", "|---|---|---|---|"]
+        for n in [n for n in nss if rx.search(n)]:
+            rc, out, _ = oc("get", "pods", "-n", n, "--no-headers")
+            npods = len(out.splitlines()) if rc == 0 else "?"
+            custom = [nm for _, it in clfs for nm, i in {i["name"]: i for i in it.get("spec", {}).get("inputs", []) or []}.items()
+                      if n in input_desc(i)]
+            L.append(f"| {n} | {npods} | {'no (infrastructure-type)' if INFRA_NS.match(n) else 'yes (no excludes)' if not any('excludes=' in input_desc(i) for _, it in clfs for i in it.get('spec', {}).get('inputs', []) or []) else 'check excludes'} | {', '.join(custom) or '-'} |")
+        L.append("")
+    save(outdir, "routing.md", "\n".join(L) + "\n")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("outdir")
     ap.add_argument("--namespace", default="openshift-logging")
     ap.add_argument("--logs", metavar="SINCE", help="also count collector errors per output, e.g. --logs 1h")
+    ap.add_argument("--routing", action="store_true", help="also write routing.md (pipelines, filters, targets, audit policy)")
+    ap.add_argument("--app-ns", metavar="REGEX", help="with --routing: report these application namespaces")
     a = ap.parse_args()
 
     rc, server, _ = oc("whoami", "--show-server")
@@ -216,6 +291,8 @@ def main():
             errs = "NO COLLECTOR PODS FOUND (label app.kubernetes.io/component=collector)"
         summary += (f" | errors {a.logs} ({n_pods} collector pods): {errs} | drop lines: {drp}"
                     f" | brokers in errors: {','.join(bad_brokers) or 'none'}")
+    if a.routing:
+        routing(outdir, clfs, a.app_ns)
     save(outdir, "summary.txt", summary + "\n")
     print(summary)
 
