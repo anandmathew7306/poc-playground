@@ -27,6 +27,21 @@ cluster data.
 | `acm-logging.txt` | ACM policy messages on this managed cluster that mention logging objects |
 | `server.txt` | API server the data came from |
 
+## Routing summary (`--routing`)
+
+Add `--routing` (and optionally `--app-ns '^(team-a|team-b)-'`) to also write `routing.md`:
+
+- for each pipeline: inputs, filters (with the labels they add), and each output's type,
+  endpoint, topic and appName
+- custom inputs and their namespace selection
+- the API server audit policy (`apiservers.config.openshift.io/cluster`)
+- the split between infrastructure-type namespaces (`openshift*`, `kube-*`, `default`) and
+  application-type ones
+- with `--app-ns`: which matching namespaces exist, their pod count, and whether the
+  `application` input (or a custom input) covers them
+
+Read-only, same rules as below.
+
 ## Safety
 
 - Only `oc get` and `oc whoami`; any other verb is refused in code.
